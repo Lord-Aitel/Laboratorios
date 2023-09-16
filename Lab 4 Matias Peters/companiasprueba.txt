@@ -1,0 +1,16 @@
+Warrior Aegir 95
+Warlock Freyja 88
+Mage Odin 100
+Necromancer Hel 82
+Warrior Thor 90
+Mage Frigg 94
+Warlock Loki 87
+3
+Mage Baldr 91
+Warrior Tyr 83
+Necromancer Fenrir 89
+Mage Skadi 85
+Warlock Bragi 96
+Mage Idun 97
+Warrior Sif 81
+Necromancer Sigyn 84
