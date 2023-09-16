@@ -72,10 +72,12 @@ int main(int argc, char *argv[]) {
     int i;
     int j;
 	if (argc != 2) {
-        printf("Uso: %s <archivo_de_entrada>\n", argv[0]);
+        printf("Uso: %s companiasprueba\n", argv[0]);
         return 1;
     }
-    FILE *archivo = fopen("companiasprueba", "r");
+    FILE *archivo;
+    char linea[100];
+	archivo = fopen(argv[1], "r");
 
     if (!archivo) {
         perror("Error al abrir el archivo");
@@ -86,7 +88,7 @@ int main(int argc, char *argv[]) {
     int numCompanias;
     fscanf(archivo, "%d", &numCompanias);
     struct Compania *companias = malloc(numCompanias * sizeof(struct Compania));
-
+	
     for (i = 0; i < numCompanias; i++) {
         fscanf(archivo, "%s", companias[i].nombre);
         for (j = 0; j < 5; j++) {
