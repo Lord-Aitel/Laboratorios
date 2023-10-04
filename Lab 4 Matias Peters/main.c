@@ -71,13 +71,9 @@ float general_average_employees(const struct Compania companias[], int numCompan
 int main(int argc, char *argv[]) {
     int i;
     int j;
-	if (argc != 2) {
-        printf("Uso: %s companiasprueba\n", argv[0]);
-        return 1;
-    }
     FILE *archivo;
     char linea[100];
-	archivo = fopen(argv[1], "r");
+	archivo = fopen("companiasprueba.txt", "r");
 
     if (!archivo) {
         perror("Error al abrir el archivo");
@@ -104,6 +100,11 @@ int main(int argc, char *argv[]) {
     if (promedioEmpleados != -1.0f) {
         printf("Promedio de empleados en todas las compañías para el año %d: %.2f\n", yearToCalculate, promedioEmpleados);
     }
+    
+    for(i = 0; i < numCompanias; i++)
+    {
+    	printf("%d", companias[i].nombre);
+	}
 
     // Liberar la memoria y cerrar el archivo
     free(companias);
