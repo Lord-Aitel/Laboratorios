@@ -22,7 +22,7 @@ int main() {
 	int opcion;
 
     printf("Bienvenido al juego de The Clash of the Guardians\n");
-
+	//utiliza while para que el jugador no ingrese valores fuera de las alternativas dadas, dado el caso se repetira el proceso
     while (1) {
         printf("Escoje una opcion:\n");
         printf("1. Crear una carta\n");
@@ -31,7 +31,7 @@ int main() {
         printf("4. Salir\n");
         printf("Ingresa tu eleccion: ");
         scanf("%d", &opcion);
-
+		
         if (opcion == 1) {
             printf("Has seleccionado la Opcion 1.\n");
             // Código para la opción 1
