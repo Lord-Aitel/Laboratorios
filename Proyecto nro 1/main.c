@@ -8,11 +8,12 @@ struct jugador{
 typedef struct{
 	
 	char nombre[40];
+	char tipo[20];
 	int ataque;
 	int defensa;
 	int vida;
 	
-}carta;
+}Carta;
 struct historial{
 	
 };
@@ -21,21 +22,63 @@ int main() {
 	
 	FILE *file;
 	
-	file = fopen("file.txt","r");
+	file = fopen("cartas.txt","r");
+	
+	if(file == NULL)
+	{
+		printf("no existe un archivo que leer");
+		return 1;
+	}
+	
+	
 	Carta cartas[60];
 	
-	int read = 0;
+	int leer = 0;
 	int opcion;
-	int records = 0;
+	int datos = 0;
 	do{
-		read=fscan(file
-		"%c,%d,%d\n",
-		&carta)
+		leer = fscanf(file,
+					"%39[^,],%19[^,],%d,%d,%d\n",
+					cartas[datos].nombre,
+					cartas[datos].tipo,
+					&cartas[datos].vida,
+					&cartas[datos].ataque,
+					&cartas[datos].defensa);
+		
+		if(leer == 5) datos++;
+		
+		if(leer != 5 && !feof(file))
+		{
+			printf("Formato incorrecto");
+		}
+		if(ferror(file))
+		{
+			printf("error de lectura");
+			return 1;
+		}
+		
+	}while(!feof(file));
+	
+	fclose(file);
+	
+	printf("\n%d datos leer.\n\n",datos);
+	
+	int i;
+	
+	for(i = 0; i<datos; i++)
+	{
+		printf("%s,%s,%d,%d,%d",
+				cartas[i].nombre,
+				cartas[i].tipo,
+				cartas[i].vida,
+				cartas[i].ataque,
+				cartas[i].defensa);
+		printf("\n");
 	}
 
     printf("Bienvenido al juego de The Clash of the Guardians\n");
 	//utiliza while para que el jugador no ingrese valores fuera de las alternativas dadas, dado el caso se repetira el proceso
-    while (1) {
+    /*while (1) {
     	
         printf("Escoje una opcion:\n");
         printf("1 para crear una carta\n");
@@ -46,13 +89,13 @@ int main() {
         scanf("%d", &opcion);
 		
         if (opcion == 1) {
-            printf("Has seleccionado la Opcion 1\n");
-            printf("continuacion se te mostraran las reglas del juego por mientras se revuelven las cartas\n");
+            printf("Has seleccionado la Opcion de crar una carta\n");
             // Código para la opción 1
+            
             break; // Salir del bucle si la opción es válida
         } else if (opcion == 2) {
             printf("Has seleccionado la Opcion 2\n");
-            printf("",)
+            printf("");
             // Código para la opción 2
             break; // Salir del bucle si la opción es válida
         } else if (opcion == 3) {
@@ -65,7 +108,7 @@ int main() {
         } else {
             printf("Opcion no valida, por favor, selecciona una opcion valida\n");
         }
-    }
+    }*/
 
     return 0;
 }
