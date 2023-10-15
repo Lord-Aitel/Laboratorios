@@ -3,6 +3,11 @@
 #include <time.h>
 #include <string.h>
 #include <locale.h>
+#define MAX_EVENTOS 100
+
+typedef struct {
+    char evento[100];  // Texto del evento
+} RegistroEvento;
 
 typedef struct {
     char nombreCarta[40];
@@ -32,6 +37,18 @@ void llenarMazoInicial(Mazo* mazo, Carta* cartas) {
     }
 }
 
+void barajarCartas(Carta* cartas, int numCartas) {
+    int i, j;
+    for (i = numCartas - 1; i > 0; i--) {
+        j = rand() % (i + 1);
+
+        // Intercambia las cartas en las posiciones i y j
+        Carta temp = cartas[i];
+        cartas[i] = cartas[j];
+        cartas[j] = temp;
+    }
+}
+
 void elegirCartasParaMano(Mazo* mazo, Jugador* jugador) {
     int i;
     printf("Estas son tus cartas iniciales:\n");
@@ -55,24 +72,22 @@ void elegirCartasParaMano(Mazo* mazo, Jugador* jugador) {
         }
     }
 
-    // Mover las cartas seleccionadas a la mano del jugador
+    // Limpia la mano del jugador
+    for (i = 0; i < 3; i++) {
+        jugador->mano[i] = NULL;
+    }
+
+    // Mover las cartas seleccionadas a la mano del jugador y al mazo del jugador
     for (i = 0; i < 3; i++) {
         int cartaSeleccionada = seleccion[i] - 1;
         jugador->mano[i] = mazo->cartas[cartaSeleccionada];
-        mazo->cartas[cartaSeleccionada] = NULL;  
+        mazo->cartas[cartaSeleccionada] = NULL;
     }
-    mazo->numCartas -= 3;  
-}
+    mazo->numCartas -= 3;
 
-void barajarCartas(Mazo* mazo) {
-    int i, j;
-    for (i = mazo->numCartas - 1; i > 0; i--) {
-        j = rand() % (i + 1);
-
-        // Intercambia las cartas en las posiciones i y j
-        Carta* temp = mazo->cartas[i];
-        mazo->cartas[i] = mazo->cartas[j];
-        mazo->cartas[j] = temp;
+    // Copia las cartas restantes en el mazo del jugador para futuros turnos
+    for (i = 0; i < mazo->numCartas; i++) {
+        jugador->mazo[i] = mazo->cartas[i];
     }
 }
 
@@ -126,6 +141,11 @@ void atacarComputadora(Jugador* computadora, Jugador* jugador) {
     Carta* defensoraCarta = jugador->mano[cartaDefensora];
 
     int danoNeto = atacanteCarta->ataque - defensoraCarta->defensa;
+    
+    // Asegúrate de que el daño nunca sea negativo
+    if (danoNeto < 0) {
+        danoNeto = 0;
+    }
 
     defensoraCarta->vida -= danoNeto;
 
@@ -141,34 +161,54 @@ void atacarComputadora(Jugador* computadora, Jugador* jugador) {
 }
 
 void atacarOponente(Jugador *jugador, Jugador *oponente) {
-    int cartaAtacante, cartaDefensora, i;
+    // Primero se muestra la mano del oponente para atacar
+    mostrarCartasOponente(oponente);
 
+    // Selecciona una carta del jugador para atacar
+    int cartaAtacante;
     do {
-        printf("Selecciona una carta para atacar (1-3): ");
+        printf("Selecciona una carta de tu mano para atacar (1-3): ");
         scanf("%d", &cartaAtacante);
         if (cartaAtacante < 1 || cartaAtacante > 3 || jugador->mano[cartaAtacante - 1]->nombreCarta[0] == '\0') {
             printf("Opción no válida. Por favor, selecciona una carta válida.\n");
         }
     } while (cartaAtacante < 1 || cartaAtacante > 3 || jugador->mano[cartaAtacante - 1]->nombreCarta[0] == '\0');
 
-    cartaDefensora = (rand() % 3) + 1; 
+    int cartaOponente;
+    
+    do {
+        printf("Selecciona una carta del oponente para atacar (1-3): ");
+        scanf("%d", &cartaOponente);
+        if (cartaOponente < 1 || cartaOponente > 3 || oponente->mano[cartaOponente - 1]->nombreCarta[0] == '\0') {
+            printf("Opción no válida. Por favor, selecciona una carta válida del oponente.\n");
+        }
+    } while (cartaOponente < 1 || cartaOponente > 3 || oponente->mano[cartaOponente - 1]->nombreCarta[0] == '\0');
 
+    // Realiza el ataque
     Carta* atacanteCarta = jugador->mano[cartaAtacante - 1];
-    Carta* oponenteCarta = oponente->mano[cartaDefensora - 1];
+    Carta* oponenteCarta = oponente->mano[cartaOponente - 1];
 
-    int danoNeto = jugador->mano[cartaAtacante - 1]->ataque - oponenteCarta->defensa;
+    // El daño es igual al valor de ataque del jugador
+    int danoNeto = atacanteCarta->ataque;
 
+    // Asegúrate de que el daño nunca sea negativo
+    if (danoNeto < 0) {
+        danoNeto = 0;
+    }
+
+    // Resta vida a la carta del oponente
     oponenteCarta->vida -= danoNeto;
 
+    // Elimina la carta del oponente si su vida llega a 0 o menos
     if (oponenteCarta->vida <= 0) {
         printf("La carta del oponente ha muerto!\n");
         oponenteCarta->vida = 0;
-        for (i = cartaDefensora - 1; i < 2; i++) {
-            oponente->mano[i] = oponente->mano[i + 1];
-        }
-        oponente->mano[2] = NULL;
+        oponente->mano[cartaOponente - 1]->nombreCarta[0] = '\0'; // Elimina la carta del oponente
+        jugador->puntosVida--;  // Resta un punto de vida al jugador
+        oponente->puntosVida--; // Resta un punto de vida al oponente
     }
 
+    // Muestra el resultado del ataque
     printf("%s ha atacado al oponente con %s y causó %d puntos de daño.\n", jugador->nombreJugador, atacanteCarta->nombreCarta, danoNeto);
     printf("Puntos de vida del oponente: %d\n", oponente->puntosVida);
 }
@@ -193,6 +233,22 @@ void sacarCartaDeMano(Jugador *jugador) {
             jugador->mano[i] = jugador->mazo[i];
             jugador->mazo[i] = NULL;
             break;
+        }
+    }
+}
+
+void mostrarCartasOponente(Jugador* oponente) {
+    printf("Cartas del oponente:\n");
+    int i;
+    for (i = 0; i < 3; i++) {
+        if (oponente->mano[i]->nombreCarta[0] != '\0') {
+            printf("%d. Nombre: %s, Tipo: %s, Ataque: %d, Defensa: %d, Vida: %d\n",
+                   i + 1,
+                   oponente->mano[i]->nombreCarta,
+                   oponente->mano[i]->tipo,
+                   oponente->mano[i]->ataque,
+                   oponente->mano[i]->defensa,
+                   oponente->mano[i]->vida);
         }
     }
 }
@@ -290,9 +346,30 @@ void crearCarta(Carta cartas[], int *datos) {
     printf("La carta ha sido creada y agregada a la lista.\n");
 }
 
+// Función para mostrar el historial
+void mostrarHistorial(RegistroEvento historial[], int numEventos) {
+	int i;
+    printf("Historial de eventos:\n");
+    for (i = 0; i < numEventos; i++) {
+        printf("%d. %s\n", i + 1, historial[i].evento);
+    }
+}
+
+void agregarEvento(RegistroEvento historial[], int* numEventos, const char* evento) {
+    if (*numEventos < MAX_EVENTOS) {
+        strncpy(historial[*numEventos].evento, evento, sizeof(historial[*numEventos].evento));
+        (*numEventos)++;
+    } else {
+        printf("El historial está lleno. No se pueden agregar más eventos.\n");
+    }
+}
+
 int main() {
     srand(time(NULL));
     setlocale(LC_ALL, "");
+
+	RegistroEvento historial[MAX_EVENTOS]; // Declarar un arreglo para el historial
+    int numEventos = 0; // Inicializar el número de eventos
 
     FILE* file;
     file = fopen("cartas.txt", "r");
@@ -335,21 +412,18 @@ int main() {
     fclose(file);
 
     printf("%d datos leídos.\n\n", datos);
-
-    Mazo mazo;
-    llenarMazoInicial(&mazo, cartasOriginales);
+	barajarCartas(cartasOriginales, datos);
 
     printf("Bienvenido al juego de The Clash of the Guardians\n");
     printf("Ingresa tu nombre: ");
     scanf("%s", jugador->nombreJugador);
 
-    elegirCartasParaMano(&mazo, jugador);
+
 
     for (i = 0; i < 12; i++) {
         jugador->mazo[i] = &cartasOriginales[i];
         oponente->mazo[i] = &cartasOriginales[i + 3];
     }
-
     while (1) {
         int turno = 1;
         int opcion;
@@ -360,26 +434,42 @@ int main() {
         printf("4 para salir\n");
         printf("Ingresa tu elección: ");
         scanf("%d", &opcion);
-
+		
         if (opcion == 1) {
             printf("Has seleccionado la Opción de crear una carta\n");
             crearCarta(cartasOriginales, &datos);
+            agregarEvento(historial, &numEventos, "Se ingreso una carta nueva dentro de la tanda");
         } else if (opcion == 2) {
             printf("Has seleccionado la Opción 2\n");
-            barajarCartas(&mazo);
+            
+            Mazo mazo;
+            
+    		llenarMazoInicial(&mazo, cartasOriginales);
+    		
+    		elegirCartasParaMano(&mazo, jugador);
+    		
             repartirCartas(cartasOriginales, jugador, oponente, datos);
+            
             while (jugador->puntosVida > 0 && oponente->puntosVida > 0) {
                 if (turno == 1) {
                     turnoJugador(jugador, oponente);
                     turno = 2;
+                    agregarEvento(historial, &numEventos, "Jugador ataco al oponente");
                 } else {
                     turnoComputadora(oponente, jugador);
                     turno = 1;
+                    agregarEvento(historial, &numEventos, "computadora ataco al oponente");
                 }
             }
+            if (jugador->puntosVida <= 0) {
+			    printf("¡Has perdido! La Computadora ha ganado.\n");
+			} else if (oponente->puntosVida <= 0) {
+			    printf("¡Has ganado! Has derrotado a la Computadora.\n");
+			}
+            
         } else if (opcion == 3) {
             printf("Has seleccionado la Opción 3\n");
-            // Código para mostrar el historial
+            mostrarHistorial(historial, numEventos);
         } else if (opcion == 4) {
             printf("Saliendo del programa\n");
             free(jugador);
@@ -389,6 +479,5 @@ int main() {
             printf("Opción no válida, por favor, selecciona una opción válida\n");
         }
     }
-
     return 0;
 }
